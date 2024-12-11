@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
-
 
 # Custom transformer for encoding time features
 class TimeFeatureEncoder(BaseEstimator, TransformerMixin):
@@ -50,10 +50,14 @@ def create_pipeline(numerical_cols, categorical_cols):
     preprocess = ColumnTransformer(
         transformers=[
             ('time_features', TimeFeatureEncoder(date_col='date'), ['date']),
-            ('distance', FunctionTransformer(calculate_distance), ['latitude', 'longitude']),
+            ('distance', FunctionTransformer(calculate_distance), 
+             ['latitude', 'longitude']),
             ('numerical_scaler', StandardScaler(), numerical_cols),
-            ('counter_id_enc', OneHotEncoder(handle_unknown='ignore', sparse_output=False), ['counter_id']),
-            ('site_id_enc', OneHotEncoder(handle_unknown='ignore', sparse_output=False), ['site_id']),
+            ('counter_id_enc', OneHotEncoder(handle_unknown='ignore', 
+                                             sparse_output=False), 
+                                             ['counter_id']),
+            ('site_id_enc', OneHotEncoder(handle_unknown='ignore', 
+                                          sparse_output=False), ['site_id']),
         ],
         remainder='drop'
     )
@@ -61,7 +65,8 @@ def create_pipeline(numerical_cols, categorical_cols):
     # Final pipeline with preprocessing and model
     pipeline = Pipeline([
         ('preprocess', preprocess),
-        ('model', ExtraTreesRegressor(n_estimators=100, random_state=42, verbose=3))
+        ('model', ExtraTreesRegressor(n_estimators=100, random_state=42, 
+                                      verbose=3))
     ])
 
     return pipeline
@@ -90,7 +95,8 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
 
     def in_lockdown(dt):
         d_str = dt.strftime('%Y-%m-%d')
-        return 1 if any(start <= d_str <= end for start, end in lockdown_periods) else 0
+        return 1 if any(start <= d_str <= end for start, end in 
+                        lockdown_periods) else 0
     train_df['is_lockdown'] = train_df['date'].apply(in_lockdown)
 
     # Merge school holidays
@@ -101,7 +107,8 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
         right_on='date',
         how='left'
     )
-    train_df.rename(columns={'vacances_zone_c': 'school_holidays'}, inplace=True)
+    train_df.rename(columns={'vacances_zone_c': 'school_holidays'}, 
+                    inplace=True)
     train_df.drop(columns=['date_only', 'date_y'], inplace=True)
     train_df.rename(columns={'date_x': 'date'}, inplace=True)
 
@@ -109,21 +116,25 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
     train_df = pd.merge(train_df, weather_df, on='date', how='left')
     return train_df
 
-
 # Load datasets
+#train_df = pd.read_parquet("../input/mdsb-2023/train.parquet")
+#test_df = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
+#school_hols_df = pd.read_csv("../input/mdsb-2023/holidays.csv")
 train_df = pd.read_parquet("data/train.parquet")
 test_df = pd.read_parquet("data/final_test.parquet")
 school_hols_df = pd.read_csv("external_data/holidays.csv")
 
 # Load and preprocess weather data
 weather_df = pd.read_csv(
+    #"../input/mdsb-2023/H_75_previous-2020-2022.csv.gz",
     "external_data/H_75_previous-2020-2022.csv.gz",
     parse_dates=["AAAAMMJJHH"],
     date_format="%Y%m%d%H",
     compression="gzip",
     sep=";").rename(columns={"AAAAMMJJHH": "date"})
 
-weather_df = weather_df[['NUM_POSTE', 'date', 'RR1', 'DRR1', 'FF', 'T', 'TCHAUSSEE', 'U', 'GLO']]
+weather_df = weather_df[['NUM_POSTE', 'date', 'RR1', 'DRR1', 'FF', 
+                         'T', 'TCHAUSSEE', 'U', 'GLO']]
 weather_df = weather_df[weather_df['NUM_POSTE'] == 75114001]
 weather_df.drop('NUM_POSTE', axis=1, inplace=True)
 weather_df.set_index('date', inplace=True)
@@ -139,7 +150,8 @@ y_train = final_train_df['log_bike_count']
 X_train = final_train_df.drop(columns=['log_bike_count'])
 X_test = final_test_df
 
-numerical_cols = ['RR1', 'DRR1', 'FF', 'T', 'TCHAUSSEE', 'U', 'GLO', 'is_bank_holiday', 'is_lockdown', 'school_holidays']
+numerical_cols = ['RR1', 'DRR1', 'FF', 'T', 'TCHAUSSEE', 'U', 'GLO', 
+                  'is_bank_holiday', 'is_lockdown', 'school_holidays']
 categorical_cols = ['counter_id', 'site_id']
 
 # Create pipeline
