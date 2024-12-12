@@ -117,16 +117,15 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
     return train_df
 
 # Load datasets
-train_df = pd.read_parquet("../input/mdsb-2023/train.parquet")
-test_df = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
-school_hols_df = pd.read_csv("../input/mdsb-2023/holidays.csv")
+train_df = pd.read_parquet("../input/msdb-2024/train.parquet")
+test_df = pd.read_parquet("../input/msdb-2024/final_test.parquet")
+school_hols_df = pd.read_csv("../input/holidays-csv/holidays.csv")
 
 # Load and preprocess weather data
 weather_df = pd.read_csv(
-    "../input/mdsb-2023/H_75_previous-2020-2022.csv.gz",
+    "../input/h-75-previous-2020-2022-csv-gz/H_75_previous-2020-2022.csv",
     parse_dates=["AAAAMMJJHH"],
     date_format="%Y%m%d%H",
-    compression="gzip",
     sep=";").rename(columns={"AAAAMMJJHH": "date"})
 
 weather_df = weather_df[['NUM_POSTE', 'date', 'RR1', 'DRR1', 'FF', 
@@ -164,4 +163,4 @@ results = pd.DataFrame({
     "Id": range(len(y_test_pred)),
     "log_bike_count": y_test_pred,
 })
-results.to_csv("submission_2.csv", index=False)
+results.to_csv("submission.csv", index=False)
