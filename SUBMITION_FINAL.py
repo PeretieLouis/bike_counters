@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import holidays
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.preprocessing import FunctionTransformer
@@ -81,7 +82,6 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
     school_hols_df['vacances_zone_c'] = school_hols_df['vacances_zone_c'].astype(int)
 
     # Add bank holidays
-    import holidays
     fr_holidays = holidays.France()
     train_df['is_bank_holiday'] = train_df['date'].dt.date.apply(
         lambda d: 1 if d in fr_holidays else 0)
@@ -117,17 +117,13 @@ def prepare_and_merge_data(train_df, weather_df, school_hols_df):
     return train_df
 
 # Load datasets
-#train_df = pd.read_parquet("../input/mdsb-2023/train.parquet")
-#test_df = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
-#school_hols_df = pd.read_csv("../input/mdsb-2023/holidays.csv")
-train_df = pd.read_parquet("data/train.parquet")
-test_df = pd.read_parquet("data/final_test.parquet")
-school_hols_df = pd.read_csv("external_data/holidays.csv")
+train_df = pd.read_parquet("../input/mdsb-2023/train.parquet")
+test_df = pd.read_parquet("../input/mdsb-2023/final_test.parquet")
+school_hols_df = pd.read_csv("../input/mdsb-2023/holidays.csv")
 
 # Load and preprocess weather data
 weather_df = pd.read_csv(
-    #"../input/mdsb-2023/H_75_previous-2020-2022.csv.gz",
-    "external_data/H_75_previous-2020-2022.csv.gz",
+    "../input/mdsb-2023/H_75_previous-2020-2022.csv.gz",
     parse_dates=["AAAAMMJJHH"],
     date_format="%Y%m%d%H",
     compression="gzip",
